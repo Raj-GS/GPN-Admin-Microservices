@@ -1,0 +1,1370 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model ai_generated_pp {
+  id           Int                       @id @default(autoincrement())
+  prayer_point String                    @db.Text
+  scriptures   String?                   @db.Text
+  pp_status    ai_generated_pp_pp_status
+  created_at   DateTime                  @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?                 @db.Timestamp(0)
+  deleted_at   DateTime?                 @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model app_users {
+  id                        Int                         @id @default(autoincrement()) @db.UnsignedInt
+  first_name                String?                     @db.VarChar(255)
+  last_name                 String?                     @db.VarChar(255)
+  role                      BigInt                      @db.UnsignedBigInt
+  org_id                    BigInt                      @db.UnsignedBigInt
+  email                     String                      @db.VarChar(255)
+  phone                     String?                     @db.VarChar(255)
+  gender                    String?                     @db.VarChar(255)
+  date_of_birth             DateTime?                   @db.Date
+  marital_status            String?                     @db.VarChar(50)
+  language_id               Int                         @default(1) @db.UnsignedInt
+  profile_pic               String?                     @db.VarChar(255)
+  baptized                  String?                     @db.VarChar(50)
+  address                   String?                     @db.Text
+  password                  String?                     @db.VarChar(255)
+  device_key                String?                     @db.VarChar(255)
+  deleted_at                DateTime?                   @db.Timestamp(0)
+  remember_token            String?                     @db.VarChar(100)
+  verified_status           app_users_verified_status
+  is_sociallogin            Int                         @default(0)
+  created_at                DateTime?                   @db.Timestamp(0)
+  updated_at                DateTime?                   @db.Timestamp(0)
+  country                   String?                     @db.VarChar(50)
+  country_code              String?                     @db.VarChar(50)
+  dial_code                 String?                     @db.VarChar(50)
+  child                     app_users_child?
+  delete_reason             String?                     @db.Text
+  active_request            app_users_active_request?
+  ministry                  Int                         @default(0)
+  ministry_status           app_users_ministry_status?
+  group_member              Int                         @default(0)
+  is_staff_admin            app_users_is_staff_admin    @default(no)
+  status                    app_users_status
+  origanisation             origanisation               @relation(fields: [org_id], references: [id], onUpdate: Restrict, map: "app_users_ibfk_1")
+  languages                 languages                   @relation(fields: [language_id], references: [id], onDelete: Cascade, map: "user_language_id")
+  roles                     roles                       @relation(fields: [role], references: [id], onDelete: Cascade, map: "user_type_reference")
+  biblestudy_views          biblestudy_views[]
+  family_details            family_details[]
+  feedback                  feedback[]
+  organisation_user         organisation_user[]
+  pray_requests             pray_requests[]
+  pray_requests_data        pray_requests_data[]
+  prayer_comments           prayer_comments[]
+  prayer_like               prayer_like[]
+  readcount                 readcount[]
+  ride_giver_details        ride_giver_details[]
+  special_prayers_subscribs special_prayers_subscribs[]
+  sundayworship_views       sundayworship_views[]
+  testimonies               testimonies[]
+  testimony_like            testimony_like[]
+  volunteers                volunteers[]
+
+  @@index([org_id], map: "org_id")
+  @@index([role], map: "user_type_reference")
+  @@index([language_id], map: "user_language_id")
+}
+
+model approval_settings {
+  id            Int                         @id @default(autoincrement())
+  org_id        BigInt                      @db.UnsignedBigInt
+  module_name   String                      @db.VarChar(100)
+  approval      String                      @db.VarChar(50)
+  bv_status     approval_settings_bv_status
+  users         String?                     @db.Text
+  created_at    DateTime                    @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?                   @db.DateTime(0)
+  origanisation origanisation               @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "aporg_id")
+
+  @@index([org_id], map: "aporg_id")
+}
+
+model bible_study {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  org_id           BigInt             @db.UnsignedBigInt
+  title            String?            @db.VarChar(255)
+  url              String?            @db.VarChar(255)
+  description      String?            @db.VarChar(255)
+  speaker          String?            @db.VarChar(255)
+  status           String?            @db.VarChar(255)
+  date             DateTime?          @db.Date
+  deleted_at       DateTime?          @db.Timestamp(0)
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  channel_id       String?            @db.VarChar(255)
+  channel_name     String?            @db.VarChar(255)
+  origanisation    origanisation      @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "bible_study_ibfk_1")
+  biblestudy_views biblestudy_views[]
+
+  @@index([org_id], map: "borg_id_reference")
+}
+
+model biblestudy_views {
+  id            BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       Int         @db.UnsignedInt
+  biblestudy_id BigInt      @db.UnsignedBigInt
+  deleted_at    DateTime?   @db.Timestamp(0)
+  created_at    DateTime?   @db.Timestamp(0)
+  updated_at    DateTime?   @db.Timestamp(0)
+  bible_study   bible_study @relation(fields: [biblestudy_id], references: [id], onDelete: Cascade, map: "bv_study_id_reference")
+  app_users     app_users   @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "bv_user_id_reference")
+
+  @@index([biblestudy_id], map: "bv_study_id_reference")
+  @@index([user_id], map: "bv_user_id_reference")
+}
+
+model categories {
+  id            BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  name          String            @db.VarChar(255)
+  deleted_at    DateTime?         @db.Timestamp(0)
+  created_at    DateTime?         @db.Timestamp(0)
+  updated_at    DateTime?         @db.Timestamp(0)
+  org_id        BigInt?           @db.UnsignedBigInt
+  status        categories_status @default(dbgenerated("1"))
+  origanisation origanisation?    @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "corg_id_reference")
+  pray_requests pray_requests[]
+  testimonies   testimonies[]
+
+  @@index([org_id], map: "corg_id_reference")
+}
+
+model daily_devotions {
+  id           Int       @id @default(autoincrement())
+  org_id       BigInt?   @db.UnsignedBigInt
+  post_date    DateTime? @db.Date
+  title        String    @db.Text
+  post_content String?   @db.Text
+  quote        String?   @db.Text
+  author       String?   @db.Text
+  created_at   DateTime  @default(now()) @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.DateTime(0)
+}
+
+model edit_org_table {
+  id                  Int           @id @default(autoincrement())
+  org_id              BigInt        @db.UnsignedBigInt
+  org_name            String        @db.VarChar(100)
+  contact_person_name String        @db.VarChar(100)
+  email               String        @db.VarChar(100)
+  phone               String?       @db.VarChar(50)
+  logo                String?       @db.VarChar(100)
+  country             String?       @db.VarChar(50)
+  country_code        String?       @db.VarChar(50)
+  dial_code           String?       @db.VarChar(50)
+  address             String?       @db.Text
+  website             String?       @db.VarChar(255)
+  created_at          DateTime      @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?     @db.Timestamp(0)
+  origanisation       origanisation @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "eorg_id")
+
+  @@index([org_id], map: "eorg_id")
+}
+
+model edit_prayer {
+  id            Int           @id @default(autoincrement())
+  prayer_id     BigInt        @db.UnsignedBigInt
+  description   String?       @db.VarChar(255)
+  created_at    DateTime      @default(now()) @db.Timestamp(0)
+  updated_at    DateTime      @default(now()) @db.Timestamp(0)
+  title         String        @db.VarChar(255)
+  pray_requests pray_requests @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "edit_prayer_id_reference")
+
+  @@index([prayer_id], map: "edit_prayer_id_reference")
+}
+
+model events {
+  id             Int           @id @default(autoincrement())
+  event_name     String        @db.VarChar(200)
+  description    String        @db.Text
+  org_id         BigInt        @db.UnsignedBigInt
+  start_date     DateTime      @db.DateTime(0)
+  contact_email  String?       @db.VarChar(100)
+  contact_number String?       @db.VarChar(50)
+  contact_info   String?       @db.Text
+  url            String?       @db.VarChar(200)
+  image          String?       @db.VarChar(200)
+  status         events_status
+  created_at     DateTime      @default(now()) @db.Timestamp(0)
+  updated_at     DateTime      @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  deleted_at     DateTime?     @db.DateTime(0)
+  origanisation  origanisation @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "eorg_id_reference")
+
+  @@index([org_id], map: "eorg_id_reference")
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model family_details {
+  id            Int                      @id @default(autoincrement())
+  user_id       Int                      @db.UnsignedInt
+  type          Int
+  person_name   String?                  @db.VarChar(100)
+  date_of_birth DateTime?                @db.Date
+  phone_number  String?                  @db.VarChar(50)
+  baptized      family_details_baptized?
+  gender        String?                  @db.VarChar(50)
+  created_at    DateTime?                @db.Timestamp(0)
+  updated_at    DateTime?                @db.Timestamp(0)
+  family_types  family_types             @relation(fields: [type], references: [id], onDelete: Cascade, map: "family_type_reference")
+  app_users     app_users                @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fauser_id_reference")
+
+  @@index([type], map: "family_type_reference")
+  @@index([user_id], map: "fauser_id_reference")
+}
+
+model family_types {
+  id             Int              @id @default(autoincrement())
+  family_type    String           @db.VarChar(50)
+  created_at     DateTime         @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?        @db.Timestamp(0)
+  family_details family_details[]
+}
+
+model feedback {
+  id            BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       Int           @db.UnsignedInt
+  rating        Int?
+  feedback      String        @db.Text
+  org_id        BigInt        @db.UnsignedBigInt
+  created_at    DateTime?     @db.Timestamp(0)
+  updated_at    DateTime?     @db.Timestamp(0)
+  origanisation origanisation @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "fe_org_id_reference")
+  app_users     app_users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fe_user_id_reference")
+
+  @@index([org_id], map: "fe_org_id_reference")
+  @@index([user_id], map: "fe_user_id_reference")
+}
+
+model forgotpasswords {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  otp        String    @db.VarChar(255)
+  email      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model gpn_modules {
+  id         Int                  @id @default(autoincrement())
+  module     String               @db.VarChar(60)
+  isActive   gpn_modules_isActive
+  created_at DateTime             @default(now()) @db.Timestamp(0)
+  updated_at DateTime?            @db.Timestamp(0)
+}
+
+model languages {
+  id             Int         @id @default(autoincrement()) @db.UnsignedInt
+  language       String?     @db.VarChar(255)
+  lan_id         Int?
+  short_code     String?     @db.VarChar(255)
+  is_active      Int         @default(1)
+  deleted_at     DateTime?   @db.Timestamp(0)
+  remember_token String?     @db.VarChar(100)
+  created_at     DateTime?   @db.Timestamp(0)
+  updated_at     DateTime?   @db.Timestamp(0)
+  app_users      app_users[]
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model ministries {
+  id            Int               @id @default(autoincrement())
+  name          String?           @db.VarChar(100)
+  description   String?           @db.Text
+  org_id        BigInt            @db.UnsignedBigInt
+  created_at    DateTime          @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?         @db.Timestamp(0)
+  deleted_at    DateTime?         @db.Timestamp(0)
+  status        ministries_status @default(active)
+  origanisation origanisation     @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "mi_org_id_reference")
+  volunteers    volunteers[]
+
+  @@index([org_id], map: "mi_org_id_reference")
+}
+
+model my_songs {
+  id            Int           @id @default(autoincrement())
+  sid           BigInt        @db.UnsignedBigInt
+  song_number   Int
+  org_id        BigInt        @db.UnsignedBigInt
+  created_at    DateTime      @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?     @db.Timestamp(0)
+  origanisation origanisation @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "my_org_id")
+  songs         songs         @relation(fields: [sid], references: [id], onDelete: Cascade, map: "sid_key")
+
+  @@index([org_id], map: "morg_id_key")
+  @@index([sid], map: "sid_key")
+}
+
+model notification {
+  id            BigInt                     @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       Int?
+  org_id        BigInt?                    @db.UnsignedBigInt
+  is_admin      Int                        @default(0)
+  title         String                     @db.VarChar(255)
+  content       String                     @db.VarChar(255)
+  time          String?                    @db.VarChar(255)
+  is_read       String?                    @db.VarChar(255)
+  deleted_at    DateTime?                  @db.Timestamp(0)
+  created_at    DateTime?                  @db.Timestamp(0)
+  updated_at    DateTime?                  @db.Timestamp(0)
+  is_admin_read notification_is_admin_read
+  module_id     Int                        @default(0)
+  role          notification_role?
+  origanisation origanisation?             @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "norg_id")
+
+  @@index([org_id], map: "norg_id")
+}
+
+model notification_users {
+  id              Int       @id @default(autoincrement())
+  user_id         Int?
+  org_id          Int?
+  notification_id Int?
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model organisation_user {
+  id              Int                              @id @default(autoincrement())
+  user_id         Int                              @db.UnsignedInt
+  role            BigInt?                          @db.UnsignedBigInt
+  org_id          BigInt                           @db.UnsignedBigInt
+  ministry        Int?
+  ministry_status Int?
+  isVerified      Int?
+  delete_reason   String?                          @db.Text
+  created_at      DateTime                         @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?                        @db.Timestamp(0)
+  deleted_at      DateTime?                        @db.Timestamp(0)
+  active_request  organisation_user_active_request
+  account_status  organisation_user_account_status @default(Accepted)
+  activation_link String?                          @db.Text
+  origanisation   origanisation                    @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "org_id_reference")
+  roles           roles?                           @relation(fields: [role], references: [id], onDelete: Cascade, map: "org_user_role")
+  app_users       app_users                        @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "user_id_reference")
+
+  @@index([ministry_status], map: "ministry_status_reference")
+  @@index([org_id], map: "org_id_reference")
+  @@index([role], map: "org_user_role")
+  @@index([user_id], map: "user_id_reference")
+  @@index([isVerified], map: "verify_reference")
+}
+
+model origanisation {
+  id                        BigInt                       @id @default(autoincrement()) @db.UnsignedBigInt
+  org_name                  String                       @db.VarChar(255)
+  short_code                String?                      @db.VarChar(100)
+  contact_person_name       String                       @db.VarChar(255)
+  email                     String                       @db.VarChar(255)
+  phone                     String                       @db.VarChar(255)
+  logo                      String?                      @db.VarChar(255)
+  status                    origanisation_status
+  deleted_at                DateTime?                    @db.Timestamp(0)
+  created_at                DateTime?                    @db.Timestamp(0)
+  updated_at                DateTime?                    @db.Timestamp(0)
+  country                   String                       @db.VarChar(50)
+  country_code              String?                      @db.VarChar(50)
+  dial_code                 String?                      @db.VarChar(50)
+  address                   String?                      @db.Text
+  website                   String?                      @db.VarChar(200)
+  update_request            origanisation_update_request @default(NoRequest)
+  app_users                 app_users[]
+  approval_settings         approval_settings[]
+  bible_study               bible_study[]
+  categories                categories[]
+  edit_org_table            edit_org_table[]
+  events                    events[]
+  feedback                  feedback[]
+  ministries                ministries[]
+  my_songs                  my_songs[]
+  notification              notification[]
+  organisation_user         organisation_user[]
+  pray_requests             pray_requests[]
+  ride_giver_details        ride_giver_details[]
+  session_prayer_category   session_prayer_category[]
+  session_prayers           session_prayers[]
+  settings                  settings[]
+  songs                     songs[]
+  songs_pdf_files           songs_pdf_files[]
+  special_prayers_subscribs special_prayers_subscribs[]
+  sundayworships            sundayworships[]
+  testimonies               testimonies[]
+  users                     users[]
+  volunteers                volunteers[]
+
+  @@index([id], map: "id")
+}
+
+model passenger_requests {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  specialPerson  String?   @db.VarChar(255)
+  departure_time String    @db.VarChar(255)
+  location       String    @db.VarChar(255)
+  destination    String    @db.VarChar(255)
+  num_passengers Int
+  start_time     String    @db.VarChar(255)
+  receiver_id    String    @db.VarChar(255)
+  status         String    @db.VarChar(255)
+  user_id        BigInt    @db.UnsignedBigInt
+  org_id         BigInt?   @db.UnsignedBigInt
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+}
+
+model passenger_requests_backup {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  specialPerson  String?   @db.VarChar(255)
+  departure_time String    @db.VarChar(255)
+  location       String    @db.VarChar(255)
+  destination    String    @db.VarChar(255)
+  num_passengers Int
+  start_time     String    @db.VarChar(255)
+  receiver_id    String    @db.VarChar(255)
+  status         String    @db.VarChar(255)
+  user_id        BigInt    @db.UnsignedBigInt
+  org_id         BigInt?   @db.UnsignedBigInt
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model password_resets {
+  email      String    @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "password_resets_email_index")
+  @@ignore
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model pinned_prayer_requests {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  prayer_id  BigInt   @db.UnsignedBigInt
+  org_id     Int
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @db.DateTime(0)
+}
+
+model pray_for_nation {
+  id              Int              @id @default(autoincrement())
+  org_id          BigInt
+  flow_type       String?          @db.VarChar(50)
+  from_date       DateTime?        @db.Date
+  to_date         DateTime?        @db.Date
+  from_time       String?          @db.VarChar(50)
+  to_time         String?          @db.VarChar(50)
+  slots           Int?
+  prayer_type     String?          @db.VarChar(50)
+  pray_for        String?          @db.VarChar(50)
+  day_of_week     String?          @db.VarChar(50)
+  created_at      DateTime         @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?        @db.Timestamp(0)
+  image           String?          @db.Text
+  prayer_id       Int?
+  number_of_days  Int?
+  session_prayers session_prayers? @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "nc_prayer_id")
+
+  @@index([prayer_id], map: "nc_prayer_id")
+}
+
+model pray_requests {
+  id                 BigInt                      @id @default(autoincrement()) @db.UnsignedBigInt
+  subcategory_id     String?                     @db.VarChar(255)
+  pinned             pray_requests_pinned        @default(false)
+  importance         pray_requests_importance?   @default(medium)
+  category_id        BigInt                      @db.UnsignedBigInt
+  title              String                      @db.VarChar(255)
+  description        String                      @db.Text
+  edit_description   String?                     @db.Text
+  user_id            Int                         @db.UnsignedInt
+  org_id             BigInt                      @db.UnsignedBigInt
+  checked            Int?                        @default(0)
+  is_answerd         Int?                        @default(0)
+  is_approved        String?                     @db.VarChar(11)
+  is_clicked         Int                         @default(0)
+  deleted_at         DateTime?                   @db.Timestamp(0)
+  created_at         DateTime?                   @db.Timestamp(0)
+  updated_at         DateTime?                   @db.Timestamp(0)
+  edit_request       pray_requests_edit_request?
+  answered_at        DateTime?                   @db.Timestamp(0)
+  edit_prayer        edit_prayer[]
+  categories         categories                  @relation(fields: [category_id], references: [id], onDelete: Cascade, map: "pcategory_id_reference")
+  origanisation      origanisation               @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "porg_id_reference")
+  app_users          app_users                   @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "puser_id_reference")
+  pray_requests_data pray_requests_data[]
+  prayer_comments    prayer_comments[]
+  prayer_like        prayer_like[]
+  testimonies        testimonies[]
+  testimony_like     testimony_like[]
+
+  @@index([category_id], map: "pcategory_id_reference")
+  @@index([org_id], map: "porg_id_reference")
+  @@index([user_id], map: "user_id")
+}
+
+model pray_requests_data {
+  id            BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       Int           @db.UnsignedInt
+  prayer_id     BigInt        @db.UnsignedBigInt
+  created_at    DateTime?     @db.Timestamp(0)
+  updated_at    DateTime?     @db.Timestamp(0)
+  reaction_type Int
+  pray_requests pray_requests @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "pr_prayer_id_reference")
+  app_users     app_users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "pr_user_id_reference")
+  reactions     reactions     @relation(fields: [reaction_type], references: [id], onDelete: Cascade, map: "reaction_id_reference")
+
+  @@index([prayer_id], map: "pr_prayer_id_reference")
+  @@index([user_id], map: "pr_user_id_reference")
+  @@index([reaction_type], map: "reaction_id_reference")
+}
+
+model prayer_comments {
+  id                    Int               @id @default(autoincrement())
+  parent_id             Int?
+  prayer_id             BigInt            @db.UnsignedBigInt
+  org_id                Int
+  user_id               Int               @db.UnsignedInt
+  comment               String            @db.Text
+  created_at            DateTime          @default(now()) @db.Timestamp(0)
+  updated_at            DateTime?         @db.DateTime(0)
+  deleted_at            DateTime?         @db.Timestamp(0)
+  pray_requests         pray_requests     @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "pc_prayer_id")
+  app_users             app_users         @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "pc_user_id")
+  prayer_comments       prayer_comments?  @relation("prayer_commentsToprayer_comments", fields: [parent_id], references: [id], onDelete: Cascade, map: "reply_prayer_id")
+  other_prayer_comments prayer_comments[] @relation("prayer_commentsToprayer_comments")
+
+  @@index([prayer_id], map: "pc_prayer_id")
+  @@index([user_id], map: "pc_user_id")
+  @@index([parent_id], map: "reply_prayer_id")
+}
+
+model prayer_like {
+  id            Int           @id @default(autoincrement())
+  user_id       Int           @db.UnsignedInt
+  prayer_id     BigInt        @db.UnsignedBigInt
+  like_id       Int?
+  created_at    DateTime      @default(now()) @db.Timestamp(0)
+  updated_at    DateTime      @default(now()) @db.Timestamp(0)
+  deleted_at    DateTime      @default(now()) @db.Timestamp(0)
+  pray_requests pray_requests @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "pl_prayer_id_reference")
+  app_users     app_users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "pl_user_id_reference")
+
+  @@index([prayer_id], map: "pl_prayer_id_reference")
+  @@index([user_id], map: "pl_user_id_reference")
+}
+
+model privateprayer_feedback {
+  id          Int      @id @default(autoincrement())
+  admin_id    Int
+  user_id     Int?
+  prayer_id   Int?
+  contact     String?
+  description String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @default(now()) @db.Timestamp(0)
+  deleted_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model reactions {
+  id                 Int                  @id @default(autoincrement())
+  type               String               @db.VarChar(50)
+  created_at         DateTime             @default(now()) @db.Timestamp(0)
+  pray_requests_data pray_requests_data[]
+}
+
+model readcount {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    Int       @db.UnsignedInt
+  name       String    @db.VarChar(255)
+  name_id    Int
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  app_users  app_users @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "rc_user_id_reference")
+
+  @@index([user_id], map: "rc_user_id_reference")
+}
+
+model ride_backup {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  seats_available Int
+  departure_time  String    @db.VarChar(255)
+  start_time      String    @db.VarChar(255)
+  from_location   String    @db.VarChar(255)
+  to_location     String    @db.VarChar(255)
+  user_id         BigInt    @db.UnsignedBigInt
+  org_id          BigInt?   @db.UnsignedBigInt
+  requests        String?   @db.LongText
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+  vehicle_type    String    @db.VarChar(255)
+  started         Boolean?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model ride_giver_details {
+  id             BigInt                             @id @default(autoincrement()) @db.UnsignedBigInt
+  vehicle_type   String                             @db.VarChar(255)
+  vehicle_number String                             @unique(map: "vehicle_number") @db.VarChar(255)
+  license        String?                            @db.Text
+  seats          String?                            @db.VarChar(50)
+  user_id        Int                                @db.UnsignedInt
+  org_id         BigInt                             @db.UnsignedBigInt
+  approve_status ride_giver_details_approve_status?
+  created_at     DateTime?                          @default(now()) @db.DateTime(0)
+  updated_at     DateTime?                          @default(now()) @db.DateTime(0)
+  origanisation  origanisation                      @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "rg_org_id")
+  app_users      app_users                          @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "rg_user_id")
+
+  @@index([org_id], map: "rg_org_id")
+  @@index([user_id], map: "rg_user_id")
+}
+
+model ride_requests {
+  id             Int                         @id @default(autoincrement())
+  ride_id        Int
+  user_id        Int
+  num_passengers Int
+  specialPerson  ride_requests_specialPerson @default(no)
+  status         String                      @db.VarChar(50)
+  org_id         Int
+  created_at     DateTime                    @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?                   @db.Timestamp(0)
+}
+
+model rides {
+  id              BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  seats_available Int
+  departure_time  String              @db.VarChar(255)
+  start_time      String              @db.VarChar(255)
+  from_location   String              @db.VarChar(255)
+  to_location     String              @db.VarChar(255)
+  user_id         BigInt              @db.UnsignedBigInt
+  org_id          BigInt?             @db.UnsignedBigInt
+  requests        String?             @db.LongText
+  created_at      DateTime?           @db.Timestamp(0)
+  updated_at      DateTime?           @db.Timestamp(0)
+  vehicle_type    String              @db.VarChar(255)
+  started         Boolean
+  num_passengers  Int?
+  specialPerson   rides_specialPerson
+}
+
+model roles {
+  id                BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  role              String              @db.VarChar(255)
+  status            String              @default("1") @db.VarChar(255)
+  deleted_at        DateTime?           @db.Timestamp(0)
+  created_at        DateTime?           @db.Timestamp(0)
+  updated_at        DateTime?           @db.Timestamp(0)
+  app_users         app_users[]
+  organisation_user organisation_user[]
+  user_permissions  user_permissions[]
+  users             users[]
+}
+
+model session_prayer_category {
+  id              Int                            @id @default(autoincrement())
+  name            String                         @db.VarChar(255)
+  org_id          BigInt?                        @db.UnsignedBigInt
+  created_at      DateTime                       @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?                      @db.Timestamp(0)
+  status          session_prayer_category_status @default(active)
+  deleted_at      DateTime?                      @db.Timestamp(0)
+  origanisation   origanisation?                 @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "spl_category_org")
+  session_prayers session_prayers[]
+
+  @@index([org_id], map: "spl_category_org")
+}
+
+model session_prayer_points {
+  id              Int                             @id @default(autoincrement())
+  prayerId        Int
+  category        String?                         @db.Text
+  prayer_point    String                          @db.Text
+  te_prayer_point String?                         @db.Text
+  pp_status       session_prayer_points_pp_status @default(active)
+  created_at      DateTime                        @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?                       @db.Timestamp(0)
+  session_prayers session_prayers                 @relation(fields: [prayerId], references: [id], onDelete: Cascade, map: "spp_prayer_id")
+
+  @@index([prayerId], map: "spp_prayer_id")
+}
+
+model session_prayers {
+  id                        Int                         @id @default(autoincrement())
+  title                     String                      @db.VarChar(255)
+  description               String                      @db.Text
+  category                  Int?
+  from_date                 DateTime?                   @db.Date
+  to_date                   DateTime?                   @db.Date
+  from_time                 String                      @db.VarChar(50)
+  to_time                   String                      @db.VarChar(50)
+  slots                     Int
+  prayer_type               String?                     @db.VarChar(50)
+  pray_for                  String?                     @db.VarChar(50)
+  day_of_week               String?                     @db.VarChar(50)
+  created_at                DateTime                    @default(now()) @db.Timestamp(0)
+  updated_at                DateTime?                   @db.Timestamp(0)
+  org_id                    BigInt?                     @db.UnsignedBigInt
+  status                    session_prayers_status      @default(active)
+  image                     String?                     @db.Text
+  flow_type                 String?                     @db.VarChar(50)
+  number_of_days            Int?
+  pray_for_nation           pray_for_nation[]
+  session_prayer_points     session_prayer_points[]
+  session_prayer_category   session_prayer_category?    @relation(fields: [category], references: [id], onDelete: Cascade, map: "spl_category")
+  origanisation             origanisation?              @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "spl_org")
+  session_scriptures        session_scriptures[]
+  special_prayers_subscribs special_prayers_subscribs[]
+  time_slots                time_slots[]
+  user_day_activities       user_day_activities[]
+
+  @@index([category], map: "spl_category")
+  @@index([org_id], map: "spl_org")
+}
+
+model session_scriptures {
+  id              Int             @id @default(autoincrement())
+  prayerId        Int
+  scripture       String          @db.VarChar(255)
+  created_at      DateTime        @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?       @db.Timestamp(0)
+  session_prayers session_prayers @relation(fields: [prayerId], references: [id], onDelete: Cascade, map: "splc_prayer_id")
+
+  @@index([prayerId], map: "splc_prayer_id")
+}
+
+model settings {
+  id                    Int                            @id @default(autoincrement())
+  org_id                BigInt                         @db.UnsignedBigInt
+  events                settings_events
+  testimonies           settings_testimonies
+  messages              settings_messages              @default(no)
+  songs                 settings_songs                 @default(no)
+  hevents               settings_hevents               @default(no)
+  htestimonies          settings_htestimonies          @default(no)
+  hworships             settings_hworships             @default(no)
+  hdailydevotion        settings_hdailydevotion        @default(no)
+  hchurchhistory        settings_hchurchhistory        @default(no)
+  hdailydevotionimg     String?                        @db.Text
+  hchurchhistoryimg     String?                        @db.Text
+  heventsimg            String?                        @db.Text
+  hworshipsimg          String?                        @db.Text
+  htestimoniesimg       String?                        @db.Text
+  fontColor             String?                        @db.VarChar(255)
+  fontFamily            String?                        @db.VarChar(255)
+  backgroundColor       String?                        @db.Text
+  hdailydevotiondefault settings_hdailydevotiondefault @default(yes)
+  faith_statement       String?                        @db.Text
+  created_at            DateTime                       @default(now()) @db.Timestamp(0)
+  updated_at            DateTime                       @default(dbgenerated("('0000-00-00 00:00:00')")) @db.Timestamp(0)
+  songs_display         settings_songs_display         @default(Both)
+  ride                  settings_ride?                 @default(yes)
+  common_prayers        settings_common_prayers        @default(yes)
+  pray_for_the_nation   settings_pray_for_the_nation   @default(yes)
+  origanisation         origanisation                  @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "seorg_id_reference")
+
+  @@index([org_id], map: "seorg_id_reference")
+}
+
+model songs {
+  id            BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  song_id       Int
+  title         String          @db.VarChar(255)
+  song          String?         @db.Text
+  eng_title     String?         @db.Text
+  eng_lyrics    String?         @db.Text
+  author        String?         @db.VarChar(255)
+  org_id        BigInt?         @db.UnsignedBigInt
+  language_id   Int             @db.UnsignedInt
+  lyric_id      Int             @default(0)
+  copyright     songs_copyright @default(yes)
+  status        Int?            @default(1)
+  created_at    DateTime?       @db.Timestamp(0)
+  updated_at    DateTime?       @db.Timestamp(0)
+  music_lyrics  String?         @db.Text
+  my_songs      my_songs[]
+  origanisation origanisation?  @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "song_org_id")
+
+  @@index([language_id], map: "lan_id_reference")
+  @@index([org_id], map: "snorg_id_reference")
+}
+
+model songs_pdf_files {
+  id            Int           @id @default(autoincrement())
+  title         String        @db.VarChar(100)
+  song_url      String        @db.Text
+  org_id        BigInt        @db.UnsignedBigInt
+  created_at    DateTime      @default(now()) @db.Timestamp(0)
+  updated_at    DateTime      @db.DateTime(0)
+  deleted_at    DateTime?     @db.Timestamp(0)
+  origanisation origanisation @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "song_pdf_org")
+
+  @@index([org_id], map: "song_pdf_org")
+}
+
+model special_prayers_subscribs {
+  id              Int             @id @default(autoincrement())
+  userId          Int             @db.UnsignedInt
+  prayerId        Int
+  slotId          Int
+  category        Int?
+  org_id          BigInt          @db.UnsignedBigInt
+  created_at      DateTime        @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?       @db.Timestamp(0)
+  updated_by      Int?
+  deleted_at      DateTime?       @db.Timestamp(0)
+  start_date      DateTime?       @db.Date
+  to_date         DateTime?       @db.Date
+  origanisation   origanisation   @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "splsub_org_id")
+  session_prayers session_prayers @relation(fields: [prayerId], references: [id], onDelete: Cascade, map: "splsub_prayer_id")
+  time_slots      time_slots      @relation(fields: [slotId], references: [id], onDelete: Cascade, map: "splsub_time_slot_id")
+  app_users       app_users       @relation(fields: [userId], references: [id], onDelete: Cascade, map: "splsub_user_id")
+
+  @@index([prayerId], map: "splsub_prayer_id")
+  @@index([userId], map: "splsub_user_id")
+  @@index([org_id], map: "splsub_org_id")
+  @@index([slotId], map: "splsub_time_slot_id")
+}
+
+model subcategories {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  category_id Int
+  name        String    @db.VarChar(255)
+  deleted_at  DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+model sundayworship_views {
+  id               BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id          Int            @db.UnsignedInt
+  sundayworship_id BigInt         @db.UnsignedBigInt
+  created_at       DateTime?      @db.Timestamp(0)
+  updated_at       DateTime?      @db.Timestamp(0)
+  sundayworships   sundayworships @relation(fields: [sundayworship_id], references: [id], onDelete: Cascade, map: "suv_sw_id_reference")
+  app_users        app_users      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "suv_user_id_reference")
+
+  @@index([sundayworship_id], map: "suv_sw_id_reference")
+  @@index([user_id], map: "suv_user_id_reference")
+}
+
+model sundayworships {
+  id                  BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  org_id              BigInt                @db.UnsignedBigInt
+  title               String?               @db.VarChar(255)
+  url                 String?               @db.VarChar(255)
+  date                DateTime?             @db.Date
+  service             String?               @db.VarChar(255)
+  description         String?               @db.Text
+  status              String?               @db.VarChar(255)
+  deleted_at          DateTime?             @db.Timestamp(0)
+  created_at          DateTime?             @db.Timestamp(0)
+  updated_at          DateTime?             @db.Timestamp(0)
+  channel_id          String?               @db.VarChar(255)
+  channel_name        String?               @db.VarChar(255)
+  sundayworship_views sundayworship_views[]
+  origanisation       origanisation         @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "suorg_id_reference")
+
+  @@index([org_id], map: "suorg_id_reference")
+}
+
+model testimonies {
+  id             Int                       @id @default(autoincrement())
+  user_id        Int                       @db.UnsignedInt
+  prayer_id      BigInt                    @db.UnsignedBigInt
+  category_id    BigInt                    @db.UnsignedBigInt
+  title          String?                   @db.VarChar(50)
+  description    String?
+  status         Int                       @default(0)
+  org_id         BigInt                    @db.UnsignedBigInt
+  created_at     DateTime                  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime                  @default(now()) @db.Timestamp(0)
+  deleted_at     DateTime?                 @db.Timestamp(0)
+  edit_request   testimonies_edit_request?
+  categories     categories                @relation(fields: [category_id], references: [id], onDelete: Cascade, map: "tcategory_id_reference")
+  origanisation  origanisation             @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "torg_id_reference")
+  pray_requests  pray_requests             @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "tprayer_id_reference")
+  app_users      app_users                 @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "tuser_id_reference")
+  testimony_like testimony_like[]
+
+  @@index([category_id], map: "tcategory_id_reference")
+  @@index([org_id], map: "torg_id_reference")
+  @@index([prayer_id], map: "tprayer_id_reference")
+  @@index([user_id], map: "tuser_id_reference")
+}
+
+model testimony_like {
+  id            Int           @id @default(autoincrement())
+  user_id       Int           @db.UnsignedInt
+  prayer_id     BigInt        @db.UnsignedBigInt
+  testimony_id  Int
+  like_id       Int?
+  created_at    DateTime      @default(now()) @db.Timestamp(0)
+  updated_at    DateTime      @default(now()) @db.Timestamp(0)
+  deleted_at    DateTime      @default(now()) @db.Timestamp(0)
+  testimonies   testimonies   @relation(fields: [testimony_id], references: [id], onDelete: Cascade, map: "ttesti_id_reference")
+  pray_requests pray_requests @relation(fields: [prayer_id], references: [id], onDelete: Cascade, map: "ttprayer_id")
+  app_users     app_users     @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "ttuser_id")
+
+  @@index([testimony_id], map: "ttesti_id_reference")
+  @@index([prayer_id], map: "ttprayer_id")
+  @@index([user_id], map: "ttuser_id")
+}
+
+model time_slots {
+  id                        Int                         @id @default(autoincrement())
+  prayerId                  Int
+  from_slot                 String                      @db.VarChar(100)
+  to_slot                   String?                     @db.VarChar(50)
+  created_at                DateTime                    @default(now()) @db.Timestamp(0)
+  updated_at                DateTime?                   @db.Timestamp(0)
+  org_id                    BigInt?
+  special_prayers_subscribs special_prayers_subscribs[]
+  session_prayers           session_prayers             @relation(fields: [prayerId], references: [id], onDelete: Cascade, map: "ts_prayer_id")
+
+  @@index([prayerId], map: "ts_prayer_id")
+}
+
+model user_day_activities {
+  id              Int                             @id @default(autoincrement())
+  userId          Int
+  slotId          Int
+  prayerId        Int
+  activity_date   DateTime?                       @db.Date
+  org_id          Int
+  category        String?                         @db.Text
+  slot_status     user_day_activities_slot_status @default(false)
+  created_at      DateTime                        @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?                       @db.Timestamp(0)
+  session_prayers session_prayers                 @relation(fields: [prayerId], references: [id], onDelete: Cascade, map: "uda_prayer_id")
+
+  @@index([prayerId], map: "uda_prayer_id")
+}
+
+model user_permissions {
+  id         Int                      @id @default(autoincrement())
+  role_id    BigInt                   @db.UnsignedBigInt
+  module_id  Int
+  module     String                   @db.VarChar(100)
+  mview      user_permissions_mview
+  madd       user_permissions_madd
+  medit      user_permissions_medit
+  mdelete    user_permissions_mdelete
+  created_at DateTime                 @default(now()) @db.Timestamp(0)
+  updated_at DateTime?                @db.Timestamp(0)
+  roles      roles                    @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "up_role_id_reference")
+
+  @@index([role_id], map: "up_role_id_reference")
+}
+
+model users {
+  id                BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String        @db.VarChar(255)
+  org_id            BigInt        @db.UnsignedBigInt
+  role              BigInt        @db.UnsignedBigInt
+  email             String        @db.VarChar(255)
+  phone_number      String?       @db.VarChar(50)
+  email_verified_at DateTime?     @db.Timestamp(0)
+  password          String        @db.VarChar(255)
+  profile_pic       String?       @db.VarChar(100)
+  status            users_status?
+  remember_token    String?       @db.VarChar(100)
+  created_at        DateTime?     @db.Timestamp(0)
+  updated_at        DateTime?     @db.Timestamp(0)
+  deleted_at        DateTime?     @db.Timestamp(0)
+  origanisation     origanisation @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "uorg_id_reference")
+  roles             roles         @relation(fields: [role], references: [id], onDelete: Cascade, map: "urole_id_reference")
+
+  @@index([org_id], map: "uorg_id_reference")
+  @@index([role], map: "urole_id_reference")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model volunteers {
+  id            Int               @id @default(autoincrement())
+  user_id       Int               @db.UnsignedInt
+  ministry_id   Int
+  org_id        BigInt            @db.UnsignedBigInt
+  status        volunteers_status
+  created_at    DateTime          @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?         @db.Timestamp(0)
+  deleted_at    DateTime?         @db.Timestamp(0)
+  ministries    ministries        @relation(fields: [ministry_id], references: [id], onDelete: Cascade, map: "vministry_id_reference")
+  origanisation origanisation     @relation(fields: [org_id], references: [id], onDelete: Cascade, map: "vorg_id_reference")
+  app_users     app_users         @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "vuser_id_reference")
+
+  @@index([ministry_id], map: "vministry_id_reference")
+  @@index([org_id], map: "vorg_id_reference")
+  @@index([user_id], map: "vuser_id_reference")
+}
+
+model wp_postmeta {
+  meta_id    BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  post_id    BigInt  @default(0) @db.UnsignedBigInt
+  meta_key   String? @db.VarChar(255)
+  meta_value String? @db.LongText
+
+  @@index([meta_key(length: 191)], map: "meta_key")
+  @@index([post_id], map: "post_id")
+}
+
+model wp_posts {
+  ID                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  post_author           BigInt   @default(0) @db.UnsignedBigInt
+  post_date             DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_date_gmt         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_content          String   @db.LongText
+  post_title            String   @db.Text
+  post_excerpt          String   @db.Text
+  post_status           String   @default("publish") @db.VarChar(20)
+  comment_status        String   @default("open") @db.VarChar(20)
+  ping_status           String   @default("open") @db.VarChar(20)
+  post_password         String   @default("") @db.VarChar(255)
+  post_name             String   @default("") @db.VarChar(200)
+  to_ping               String   @db.Text
+  pinged                String   @db.Text
+  post_modified         DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_modified_gmt     DateTime @default(dbgenerated("('0000-00-00 00:00:00')")) @db.DateTime(0)
+  post_content_filtered String   @db.LongText
+  post_parent           BigInt   @default(0) @db.UnsignedBigInt
+  guid                  String   @default("") @db.VarChar(255)
+  menu_order            Int      @default(0)
+  post_type             String   @default("post") @db.VarChar(20)
+  post_mime_type        String   @default("") @db.VarChar(100)
+  comment_count         BigInt   @default(0)
+
+  @@index([post_author], map: "post_author")
+  @@index([post_name(length: 191)], map: "post_name")
+  @@index([post_parent], map: "post_parent")
+  @@index([post_type, post_status, post_date, ID], map: "type_status_date")
+}
+
+model songs_lyrics {
+  id         Int                     @id @default(autoincrement())
+  song_id    Int
+  org_id     Int
+  song       String                  @db.Text
+  lyric_type songs_lyrics_lyric_type
+  created_at DateTime                @default(now()) @db.Timestamp(0)
+  updated_at DateTime?               @db.Timestamp(0)
+  deleted_at DateTime?               @db.Timestamp(0)
+}
+
+enum gpn_modules_isActive {
+  active   @map("1")
+  inactive @map("2")
+}
+
+enum pray_requests_pinned {
+  true
+  false
+}
+
+enum settings_events {
+  yes
+  no
+}
+
+enum ai_generated_pp_pp_status {
+  Pending  @map("0")
+  Accepted @map("1")
+  Declined @map("2")
+}
+
+enum pray_requests_importance {
+  critical @map("1")
+  high     @map("2")
+  medium   @map("3")
+}
+
+enum settings_testimonies {
+  yes
+  no
+}
+
+enum ride_requests_specialPerson {
+  yes
+  no
+}
+
+enum settings_messages {
+  yes
+  no
+}
+
+enum user_permissions_mview {
+  no  @map("0")
+  yes @map("1")
+}
+
+enum volunteers_status {
+  Pending @map("0")
+  Approve @map("1")
+  Decline @map("2")
+}
+
+enum ride_giver_details_approve_status {
+  Pending @map("0")
+  Approve @map("1")
+  Decline @map("2")
+}
+
+enum session_prayer_category_status {
+  active   @map("1")
+  inactive @map("2")
+  deleted  @map("3")
+}
+
+enum session_prayer_points_pp_status {
+  active
+  inactive
+}
+
+enum settings_songs {
+  yes
+  no
+}
+
+enum user_permissions_madd {
+  no  @map("0")
+  yes @map("1")
+}
+
+enum family_details_baptized {
+  yes
+  no
+}
+
+enum settings_hevents {
+  yes
+  no
+}
+
+enum user_permissions_medit {
+  no  @map("0")
+  yes @map("1")
+}
+
+enum ministries_status {
+  active   @map("1")
+  inactive @map("2")
+}
+
+enum origanisation_status {
+  active   @map("1")
+  inactive @map("2")
+  pending  @map("0")
+}
+
+enum settings_htestimonies {
+  yes
+  no
+}
+
+enum user_permissions_mdelete {
+  no  @map("0")
+  yes @map("1")
+}
+
+enum settings_hworships {
+  yes
+  no
+}
+
+enum approval_settings_bv_status {
+  no
+  yes
+}
+
+enum settings_hdailydevotion {
+  yes
+  no
+}
+
+enum users_status {
+  pending  @map("0")
+  accepted @map("1")
+  declined @map("2")
+}
+
+enum user_day_activities_slot_status {
+  true
+  false
+}
+
+enum events_status {
+  active   @map("1")
+  inactive @map("2")
+}
+
+enum settings_hchurchhistory {
+  yes
+  no
+}
+
+enum songs_copyright {
+  yes
+  no
+}
+
+enum notification_is_admin_read {
+  true
+  false
+}
+
+enum organisation_user_active_request {
+  Pending  @map("0")
+  Accepted @map("1")
+}
+
+enum settings_hdailydevotiondefault {
+  yes
+  no
+}
+
+enum testimonies_edit_request {
+  no
+  yes
+}
+
+enum notification_role {
+  All
+  Admin
+  User
+  Super_Admin @map("Super Admin")
+}
+
+enum organisation_user_account_status {
+  Pending  @map("0")
+  Accepted @map("1")
+  Declined @map("2")
+}
+
+enum session_prayers_status {
+  active   @map("1")
+  inactive @map("2")
+}
+
+enum origanisation_update_request {
+  NoRequest @map("0")
+  Requested @map("1")
+}
+
+enum pray_requests_edit_request {
+  no
+  yes
+}
+
+enum app_users_verified_status {
+  Pending  @map("0")
+  Verified @map("1")
+  Declined @map("2")
+}
+
+enum settings_songs_display {
+  Song
+  Pdf
+  Both
+}
+
+enum app_users_child {
+  yes
+  no
+}
+
+enum settings_pray_for_the_nation {
+  yes
+  no
+}
+
+enum app_users_active_request {
+  norequest @map("0")
+  requested @map("1")
+}
+
+enum app_users_ministry_status {
+  Pending  @map("0")
+  Accepted @map("1")
+  Declined @map("2")
+}
+
+enum app_users_is_staff_admin {
+  no
+  yes
+}
+
+enum app_users_status {
+  Pending  @map("0")
+  Active   @map("1")
+  Inactive @map("2")
+}
+
+enum rides_specialPerson {
+  yes
+  no
+}
+
+enum songs_lyrics_lyric_type {
+  active   @map("1")
+  inactive @map("2")
+}
+
+enum categories_status {
+  active   @map("1")
+  inactive @map("2")
+  deleted  @map("3")
+}
+
+enum settings_ride {
+  yes
+  no
+}
+
+enum settings_common_prayers {
+  yes
+  no
+}

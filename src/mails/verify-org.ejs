@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Glocal Prayer Network</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo img {
+      max-width: 200px;
+    }
+    .content {
+      background-color: #f8f8f8;
+      border-radius: 5px;
+      padding: 20px;
+    }
+    h1 {
+      color: #4a4a4a;
+    }
+    .button {
+      display: inline-block;
+      background-color: #3498db;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <img src="https://glocalprayer.net/prayer/public/assets/img/glocal-prayer-logo.png" alt="Glocal Prayer Network Logo" />
+  </div>
+  <div class="content">
+    <h1>Welcome to Glocal Prayer Network</h1>
+
+    <p>Dear <%= data.org_name %>,</p>
+
+    <p>We are delighted to welcome you onboard the Glocal Prayer Network. Our vision is to see people come into a closer relationship with God through prayer and supplication.</p>
+
+    <p>We're pleased to inform you that your organization has been verified by Glocal Prayer Network. You can now access our platform using your credentials.</p>
+
+    <h2>Getting Started</h2>
+    <p>To begin your journey with us, please use the following options to log in:</p>
+    <ul>
+      <li><strong>Web Access:</strong> <a href="https://glocalprayer.net/prayer/login">https://glocalprayer.net/prayer/login</a></li>
+      <li><strong>Mobile App:</strong> Download our <a href="https://play.google.com/store/apps/details?id=com.glocalprayer.ep&pcampaignid=web_share">Glocal Prayer app</a> from the Google Play Store</li>
+    </ul>
+
+    <a href="https://glocalprayer.net/prayer/login" class="button">Log In Now</a>
+
+    <h2>Team Registration</h2>
+    <p>Please share the following link with your team members for registration:</p>
+    <p><a href="https://glocalprayer.net/prayer/appuserregistration/<%= data.short_code %>">https://glocalprayer.net/prayer/appuserregistration/<%= data.short_code %></a></p>
+
+    <p>If you have any questions or need assistance, please don't hesitate to contact our support team at admin@glocalprayer.net</p>
+
+    <p>Thank you for joining us in our mission. We look forward to praying together!</p>
+
+    <p>Blessings,<br>The Glocal Prayer Network Team</p>
+  </div>
+</body>
+</html>
