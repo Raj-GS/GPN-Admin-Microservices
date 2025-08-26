@@ -9,7 +9,7 @@ const DailyDevotionController = require('../controllers/DailyDevotionController'
 const SpecialPrayerController = require('../controllers/SpecialPrayerController');
 const SongsController = require('../controllers/SongsController');
 const SettingsController = require('../controllers/SettingsController');
-
+const notificationController=require('../controllers/NotificationController');
 
 const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
@@ -18,6 +18,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 //////////// Login /////////////////////////////////
 
 router.post('/login', authController.login);
+router.get('/db-check', authController.dbCheck);
+
 router.post('/forgotpassword', authController.forgotPassword);
 
 //////////// My Profile /////////////////////////////////
@@ -30,7 +32,8 @@ router.post('/change-password', authenticateToken, profileController.updatePassw
 //////////// Dashboard /////////////////////////////////
 
 router.get('/dashboard-counts', authenticateToken, profileController.DashboardCounts);
-
+router.get('/notifications', authenticateToken, notificationController.Notifications);
+router.post('/readnotification', authenticateToken, notificationController.markNotificationRead);
 //////////// Languages /////////////////////////////////
 
 router.get('/languages', authenticateToken, profileController.Languages);
