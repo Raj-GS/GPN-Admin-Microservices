@@ -526,11 +526,46 @@ exports.DashboardCounts = async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
 
+
+
+
+    // Common base condition
+    const baseCondition = {
+      deleted_at: null,
+    };
+
+    let whereCondition = {};
+
+    if (role === 1) {
+      // Superadmin: see all categories
+      whereCondition = baseCondition;
+    } else {
+      // Other roles: only see org-specific or public categories
+      whereCondition = {
+        ...baseCondition,
+        OR: [
+          { org_id: null },
+          { org_id: orgId },
+        ],
+      };
+    }
+
+ const categories = await prisma.categories.findMany({
+      where: whereCondition,
+      select: {
+        id:true,
+        name:true
+      },
+      orderBy: { id: 'desc' },
+    });
+
+
     res.json({
       success: true,
       data: {
         counts:convertBigInt(counts),
-        recent:convertBigInt(recent)
+        recent:convertBigInt(recent),
+        categories:convertBigInt(categories)
       }
     });
   } catch (error) {
