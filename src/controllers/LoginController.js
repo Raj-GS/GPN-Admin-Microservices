@@ -22,6 +22,16 @@ function convertBigInt(obj) {
   return obj;
 }
 
+exports.dbCheck = async (req, res) => {
+
+try {
+    await prisma.$queryRaw`SELECT 1`; // lightweight test query
+    res.send("✅ Database connected successfully!");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("❌ Database connection failed!");
+  }
+}
 exports.login = async (req, res) => {
 
   const { email, password } = req?.body;
