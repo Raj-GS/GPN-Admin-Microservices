@@ -143,7 +143,6 @@ router.post('/prayer-subscriber-list', authenticateToken, SpecialPrayerControlle
 //////////// Songs /////////////////////////////////
 router.post('/filter-songs', authenticateToken, SongsController.filterSongs);
 router.get('/get-song-number', authenticateToken, SongsController.getSongNumber);
-router.post('/filter-songs', authenticateToken, SongsController.filterSongs);
 router.post('/add-song', authenticateToken, SongsController.addSong);
 router.post('/get-song-details', authenticateToken, SongsController.SongDetails);
 router.post('/update-song', authenticateToken, SongsController.updateSong);
