@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const transporter = require('../utils/mailTransport');
 const axios = require('axios');
 const nodemailer = require('nodemailer');
+const { subMonths, startOfMonth } = require("date-fns");
 
 
 function convertBigInt(obj) {
@@ -455,11 +456,14 @@ exports.DashboardCounts = async (req, res) => {
           },
         }),
         pendingPrayers: await prisma.pray_requests.count({
-          where: {
-            org_id: orgId,
-            is_approved: '0',
-          },
-        }),
+  where: {
+    org_id: orgId,
+    OR: [
+      { is_approved: null },
+      { is_approved: '0' }
+    ],
+  },
+}),
       };
 
       recent = {
@@ -528,6 +532,13 @@ exports.DashboardCounts = async (req, res) => {
 
 
 
+    var orgShortcode=await prisma.origanisation.findFirst({
+          where:{id: orgId},
+          select :{
+            org_name:true,
+            short_code:true,
+          }
+    })
 
     // Common base condition
     const baseCondition = {
@@ -560,12 +571,63 @@ exports.DashboardCounts = async (req, res) => {
     });
 
 
+
+    const today = new Date();
+    const fiveMonthsAgo = subMonths(today, 4);
+
+    const result = {};
+    for (let i = 4; i >= 0; i--) {
+      const date = subMonths(today, i);
+      const month = date.toLocaleString("default", { month: "short" });
+      result[month] = { organizations: 0, users: 0 };
+    }
+
+    if (role === 1) {
+      // Organizations only
+      const organizations = await prisma.origanisation.findMany({
+        where: {
+          created_at: {
+            gte: startOfMonth(fiveMonthsAgo),
+          },
+        },
+        select: { created_at: true },
+      });
+
+      organizations.forEach((o) => {
+        const month = new Date(o.created_at).toLocaleString("default", { month: "short" });
+        if (result[month]) result[month].organizations += 1;
+      });
+
+    } else {
+      // Users only
+      const users = await prisma.app_users.findMany({
+        where: {
+          created_at: {
+            gte: startOfMonth(fiveMonthsAgo),
+          },
+          org_id: orgId
+        },
+        select: { created_at: true },
+      });
+
+      users.forEach((u) => {
+        const month = new Date(u.created_at).toLocaleString("default", { month: "short" });
+        if (result[month]) result[month].users += 1;
+      });
+    }
+
+
+
+
+
     res.json({
       success: true,
       data: {
         counts:convertBigInt(counts),
         recent:convertBigInt(recent),
-        categories:convertBigInt(categories)
+        categories:convertBigInt(categories),
+        report:convertBigInt(result),
+        orgDetails:orgShortcode
       }
     });
   } catch (error) {
