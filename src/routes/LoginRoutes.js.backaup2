@@ -1,0 +1,35 @@
+const express = require('express');
+const router = express.Router();
+
+// Mock controllers for testing (replace with your actual imports once we find the issue)
+const mockController = {
+  login: (req, res) => res.json({ success: true }),
+  dbCheck: (req, res) => res.json({ success: true }),
+  profile: (req, res) => res.json({ success: true })
+};
+
+const mockAuth = (req, res, next) => next();
+const mockUpload = { 
+  single: () => (req, res, next) => next(),
+  array: () => (req, res, next) => next()
+};
+
+// Test Section 1: Login routes (UNCOMMENT TO TEST)
+router.post('/login', mockController.login);
+router.get('/db-check', mockController.dbCheck);
+router.post('/forgotpassword', mockController.login);
+
+// Test Section 2: Profile routes (UNCOMMENT TO TEST)
+// router.get('/my-profile', mockAuth, mockController.profile);
+// router.post('/update-profile', mockUpload.single('profile_pic'), mockAuth, mockController.profile);
+// router.post('/update-organization', mockUpload.single('logo'), mockAuth, mockController.profile);
+// router.post('/change-password', mockAuth, mockController.profile);
+
+// Test Section 3: Dashboard routes (UNCOMMENT TO TEST)
+// router.get('/dashboard-counts', mockAuth, mockController.profile);
+// router.get('/notifications', mockAuth, mockController.profile);
+// router.post('/readnotification', mockAuth, mockController.profile);
+
+// Continue adding sections one by one...
+
+module.exports = router;
