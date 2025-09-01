@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-
+const fs = require("fs");
+const path = require("path");
 function convertBigInt(obj, parentKey = '') {
   if (typeof obj === 'bigint') {
     return obj.toString();
@@ -223,25 +224,7 @@ exports.updateAllHomePageSettings = async (req, res) => {
   const fileField = `${settingName}img`;
   const selectedImageField = `${settingName}SelectedImage`;
 
-  // Handle file upload
-  if (req.files && req.files[fileField]) {
-    const imageFile = req.files[fileField][0];
-    const imageName = `${Date.now()}_${settingName}${path.extname(imageFile.originalname)}`;
-    const directoryPath = path.join(__dirname, `../public/organizations/${setting.org_id}/app`);
-
-    if (!fs.existsSync(directoryPath)) {
-      fs.mkdirSync(directoryPath, { recursive: true });
-    }
-
-    const fullPath = path.join(directoryPath, imageName);
-    fs.renameSync(imageFile.path, fullPath);
-
-    const relativePath = `organizations/${setting.org_id}/app/${imageName}`;
-    updateData[`${settingName}img`] = relativePath;
-    imagePaths[settingName] = `${req.protocol}://${req.get("host")}/${relativePath}`;
-  }
-  // Handle selected image path
-  else if (settingData.img) {
+ if (settingData.img) {
     const selectedImagePath = settingData.img;
     updateData[`${settingName}img`] = selectedImagePath;
     imagePaths[settingName] = `${req.protocol}://${req.get("host")}/${selectedImagePath}`;
@@ -254,6 +237,39 @@ exports.updateAllHomePageSettings = async (req, res) => {
       where: { id: Number(id) },
       data: updateData
     });
+
+    const orgId = Number(req.user.org_id);
+    const fileMeta = JSON.parse(req.body.fileMeta || "[]");
+  let updateFilesData = {};
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file, index) => {
+        const meta = fileMeta[index] || {};
+        const settingName = meta.name?.replace(/\s+/g, "_") || "file";
+
+        const imageName = `${Date.now()}_${settingName}${path.extname(file.originalname)}`;
+        const directoryPath = path.join(__dirname, `../public/organizations/${orgId}/app`);
+
+        if (!fs.existsSync(directoryPath)) {
+          fs.mkdirSync(directoryPath, { recursive: true });
+        }
+
+        fs.writeFileSync(path.join(directoryPath, imageName), file.buffer);
+
+     
+const relativePath = `organizations/${orgId}/app/${imageName}`;
+
+       updateFilesData[`${meta.name}img`] = relativePath;
+
+
+     
+        console.log("Saved:", imageName, "with meta:", meta);
+      });
+    }
+
+ await prisma.settings.update({
+      where: { id: Number(id) },
+      data: updateFilesData
+      });
 
     res.json({
       success: true,

@@ -19,6 +19,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/login', authController.login);
 router.get('/db-check', authController.dbCheck);
+router.post('/org-details', authController.OrgDetails);
 
 router.post('/forgotpassword', authController.forgotPassword);
 
@@ -138,6 +139,9 @@ router.post('/delete-special-prayer', authenticateToken, SpecialPrayerController
 router.post('/update-special-prayer', authenticateToken, SpecialPrayerController.updateSessionPrayer);
 router.post('/special-prayer-details', authenticateToken, SpecialPrayerController.SpecialPrayerDetails);
 router.post('/prayer-subscriber-list', authenticateToken, SpecialPrayerController.subscriptionsdetails);
+router.post('/praye-for-nation', authenticateToken, SpecialPrayerController.prayForTheNation);
+router.post('/update-pray-for-nation', authenticateToken, SpecialPrayerController.updateNationPrayer);
+
 
 
 //////////// Songs /////////////////////////////////

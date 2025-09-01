@@ -29,6 +29,7 @@ function convertBigInt(obj) {
 exports.profile = async (req, res) => {
   try {
     const userId = req.user?.id;
+    const orgId = req.user ?. org_id;
 
     if (!userId) {
       return res.status(401).json({
@@ -78,12 +79,30 @@ exports.profile = async (req, res) => {
       });
     }
 
+    const editOrgDetails = await prisma.edit_org_table.findMany({
+      where : {
+        org_id : orgId
+      },
+  select: {
+    org_name: true,
+    logo: true,
+    address: true,
+    phone: true,
+    contact_person_name: true,
+    website: true,
+    email: true,
+  },
+});
+
+const response = { ...userDetails, edit_org_table: editOrgDetails };
+
+
     const weblink = `${req.protocol}://${req.get('host')}/appuserregistration/${userDetails.origanisation.short_code}`;
 
     return res.status(200).json({
       success: true,
       message: 'user profile',
-      data: convertBigInt(userDetails),
+      data: convertBigInt(response),
       weblink,
     });
   } catch (error) {
