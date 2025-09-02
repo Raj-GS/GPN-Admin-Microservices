@@ -6,7 +6,9 @@ const { body, validationResult } = require('express-validator');
 const transporter = require('../utils/mailTransport');
 const {getOtpEmailTemplate}= require('../mails/otpTemplate');
 // controllers/userController.js
-import { randomBytes } from "crypto";
+const {randomBytes} = require('crypto');
+const path = require('path');
+const fs = require('fs');
 
 function convertBigInt(obj) {
   if (typeof obj === 'bigint') {
@@ -279,16 +281,16 @@ exports.addNewUsers = async (req, res) => {
     const {
       existed,
       existedUserId,
-      first_name,
-      last_name,
+      firstName,
+      lastName,
       email,
-      phone_number,
+      phone,
       gender,
-      orgainisation,
+      orgId,
       password,
       baptized,
       date_of_birth,
-      marital_status,
+      maritalStatus,
       address,
       country_code,
       address_country,
@@ -317,7 +319,7 @@ exports.addNewUsers = async (req, res) => {
     const approvalSettings = await prisma.approval_settings.findFirst({
       where: {
         module_name: "backgroundVerification",
-        org_id: orgainisation,
+        org_id: orgId,
       },
     });
 
@@ -330,133 +332,161 @@ exports.addNewUsers = async (req, res) => {
 
     let userId;
 
-    if (existed === "no") {
+    if (existed === "") {
       // Create new user
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const user = await prisma.appuser.create({
+      const user = await prisma.app_users.create({
         data: {
-          first_name,
-          last_name,
+          first_name:firstName,
+          last_name:lastName,
           email,
-          phone: phone_number.replace(/\s/g, ""),
+          phone: phone.replace(/\s/g, ""),
           gender,
           role: "4",
-          org_id: orgainisation,
+          org_id: orgId,
           password: hashedPassword,
           baptized,
           date_of_birth: new Date(date_of_birth),
-          marital_status,
+          marital_status:maritalStatus,
           address,
-          country: country_code,
-          country_code: address_country,
-          dial_code,
+          country: 'India',
+      //    country_code: address_country,
+          dial_code:'+91',
           child,
+          verified_status:"Verified",
+          status:"Active"
         },
       });
       userId = user.id;
 
       // OrganisationUser link
-      await prisma.organisationUser.create({
+      await prisma.organisation_user.create({
         data: {
           user_id: userId,
-          org_id: orgainisation,
+          org_id: orgId,
           isVerified,
           activation_link,
-          account_status: "0",
-          role: "4",
+          account_status: "Pending",
+          active_request:'Accepted'
         },
       });
 
       // Family Details
-      if (marital_status === "Unmarried") {
-        await prisma.familyDetails.createMany({
-          data: [
-            {
-              user_id: userId,
-              type: "1",
-              person_name: father_name,
-              date_of_birth: fdate_of_birth ? new Date(fdate_of_birth) : null,
-              phone_number: father_number,
-              baptized: fbaptized,
-            },
-            {
-              user_id: userId,
-              type: "2",
-              person_name: mother_name,
-              date_of_birth: mdate_of_birth ? new Date(mdate_of_birth) : null,
-              phone_number: mother_number,
-              baptized: mbaptized,
-            },
-          ],
-        });
-      } else {
-        await prisma.familyDetails.create({
-          data: {
-            user_id: userId,
-            type: "3",
-            person_name: spouse_name,
-            date_of_birth: sdate_of_birth ? new Date(sdate_of_birth) : null,
-            phone_number: spouse_number,
-            baptized: sbaptized,
-          },
-        });
+      // if (maritalStatus === "Unmarried") {
+      //   await prisma.family_details.createMany({
+      //     data: [
+      //       {
+      //         user_id: userId,
+      //         type: "1",
+      //         person_name: father_name,
+      //         date_of_birth: fdate_of_birth ? new Date(fdate_of_birth) : null,
+      //         phone_number: father_number,
+      //         baptized: fbaptized,
+      //       },
+      //       {
+      //         user_id: userId,
+      //         type: "2",
+      //         person_name: mother_name,
+      //         date_of_birth: mdate_of_birth ? new Date(mdate_of_birth) : null,
+      //         phone_number: mother_number,
+      //         baptized: mbaptized,
+      //       },
+      //     ],
+      //   });
+      // } else {
+      //   await prisma.family_details.create({
+      //     data: {
+      //       user_id: userId,
+      //       type: "3",
+      //       person_name: spouse_name,
+      //       date_of_birth: sdate_of_birth ? new Date(sdate_of_birth) : null,
+      //       phone_number: spouse_number,
+      //       baptized: sbaptized,
+      //     },
+      //   });
 
-        if (child === "yes" && childCount) {
-          const childrenData = [];
-          for (let i = 1; i <= Number(childCount); i++) {
-            const name = req.body[`child_name${i}`];
-            if (name) {
-              childrenData.push({
-                user_id: userId,
-                type: "4",
-                person_name: name,
-                date_of_birth: req.body[`cdate_of_birth${i}`]
-                  ? new Date(req.body[`cdate_of_birth${i}`])
-                  : null,
-                phone_number: req.body[`child_number${i}`],
-                baptized: req.body[`cbaptized${i}`],
-                gender: req.body[`cgender${i}`],
-              });
-            }
-          }
-          if (childrenData.length) {
-            await prisma.familyDetails.createMany({ data: childrenData });
-          }
-        }
-      }
+      //   if (child === "yes" && childCount) {
+      //     const childrenData = [];
+      //     for (let i = 1; i <= Number(childCount); i++) {
+      //       const name = req.body[`child_name${i}`];
+      //       if (name) {
+      //         childrenData.push({
+      //           user_id: userId,
+      //           type: "4",
+      //           person_name: name,
+      //           date_of_birth: req.body[`cdate_of_birth${i}`]
+      //             ? new Date(req.body[`cdate_of_birth${i}`])
+      //             : null,
+      //           phone_number: req.body[`child_number${i}`],
+      //           baptized: req.body[`cbaptized${i}`],
+      //           gender: req.body[`cgender${i}`],
+      //         });
+      //       }
+      //     }
+      //     if (childrenData.length) {
+      //       await prisma.family_details.createMany({ data: childrenData });
+      //     }
+      //   }
+      // }
 
       // Profile pic upload (assuming Multer middleware handles req.file)
-      if (req.file) {
-        const imagePath = `/uploads/organizations/${orgainisation}/images/${req.file.filename}`;
-        await prisma.appuser.update({
+
+           if (req.file) {
+                const uploadDir = path.join(__dirname, `../public/organizations/${orgId}/images`);
+                const oldFilePath = user.profile_pic
+                  ? path.join(__dirname, `../public/${new URL(user.profile_pic).pathname}`)
+                  : null;
+          
+                // Delete old file
+                if (oldFilePath && fs.existsSync(oldFilePath)) {
+                  fs.unlinkSync(oldFilePath);
+                }
+          
+                // Move new file
+                const newFileName = `${firstName}_${Date.now()}${path.extname(req.file.originalname)}`;
+                const newFilePath = path.join(uploadDir, newFileName);
+          
+                // Ensure directory exists
+                fs.mkdirSync(uploadDir, { recursive: true });
+                fs.writeFileSync(newFilePath, req.file.buffer);
+          
+                // Generate public URL
+                profilePicUrl = `${req.protocol}://${req.get('host')}/public/organizations/${orgId}/images/${newFileName}`;
+
+        await prisma.app_users.update({
           where: { id: userId },
-          data: { profile_pic: imagePath },
+          data: { profile_pic: profilePicUrl },
         });
-      }
+              }
+
+
+      
+      
     } else {
       // Existed user flow
       userId = existedUserId;
 
-      await prisma.organisationUser.create({
+      await prisma.organisation_user.create({
         data: {
           user_id: userId,
-          org_id: orgainisation,
+          org_id: orgId,
           isVerified,
           activation_link,
-          account_status: "0",
+          account_status: "Pending",
+          active_request:'Accepted'
         },
       });
     }
 
     // Org details
     const orgDetails = await prisma.origanisation.findUnique({
-      where: { id: orgainisation },
+      where: { id: orgId },
     });
 
     // Email content
     const mailData = {
-      name: `${first_name} ${last_name}`,
+      name: `${firstName} ${lastName}`,
       email,
       org_name: orgDetails.org_name,
       org_email: orgDetails.email,
@@ -471,33 +501,119 @@ exports.addNewUsers = async (req, res) => {
         is_admin: 1,
         title: "User Register",
         time: new Date().toLocaleTimeString(),
-        content: `${first_name} ${last_name} Registered`,
+        content: `${firstName} ${lastName} Registered`,
         user_id: userId,
-        org_id: orgainisation,
+        org_id: orgId,
         is_admin_read: "false",
         module_id: userId,
         role: "Admin",
       },
     });
 
-    // Send email (using nodemailer example)
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: process.env.MAIL_PORT,
-      auth: {
-        user: process.env.MAIL_USERNAME,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
 
-    await transporter.sendMail({
-      from: process.env.MAIL_FROM_ADDRESS,
-      to: email,
-      subject: "Activate your account",
-      html: `<p>Hello ${first_name},</p>
-             <p>Please activate your account: 
-             <a href="${mailData.activation_link}">Activate</a></p>`,
-    });
+
+
+
+await transporter.sendMail({
+  from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM}>`,
+  to: email,
+  subject: "Activate your account",
+  html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Glocal Prayer Network</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo img {
+      max-width: 200px;
+      height: auto;
+    }
+    h1, h3 {
+      color: #4a4a4a;
+      margin-bottom: 20px;
+    }
+    p {
+      margin-bottom: 15px;
+    }
+    .signature {
+      margin-top: 20px;
+      font-style: italic;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #3490dc;
+      color: #fff !important;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 20px auto;
+    }
+    .border-top {
+      margin-top: 20px;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      ${mailData.org_logo ? `<img src="${mailData.org_logo}" alt="Organization Logo" class="rounded-logo">` : ""}
+    </div>
+    
+    <h3>Dear ${firstName},</h3>
+    
+    <p>Congratulations on joining the ${mailData.org_name} community! We're excited to have you on board.</p>        
+    <p>We appreciate you choosing our platform for your prayer and other spiritual activities. Our goal is to provide a meaningful and enriching experience for all our members.</p>
+    
+    <p>To complete your registration and activate your account, please click the button below:</p>
+    <div style="text-align:center;">
+      <a href="${mailData.activation_link}" class="button">Activate Account</a>
+    </div>
+    
+    <p>Once your account is activated, you'll be able to access all the great resources and benefits that come.</p>
+    <p>If you have any questions or need assistance, please don't hesitate to reach out to our membership team at ${mailData.org_email}.</p>
+    
+    <p>We hope you'll find our platform valuable and consider recommending it to others in your community.</p>
+    
+    <p>Welcome to ${mailData.org_name}! We look forward to your participation and contributions.</p>
+
+    <hr>
+
+    <div class="border-top">
+      <p>If you're having trouble clicking the "Activate Account" button, copy and paste the URL below into your web browser:</p>
+      <p>${mailData.activation_link}</p>
+    </div>
+
+    <p>Blessings,</p>
+    <div class="signature">
+      <p>${mailData.org_name} Team</p>
+    </div>
+  </div>
+</body>
+</html>
+  `
+});
+
 
     return res.json({
       message:
@@ -506,5 +622,55 @@ exports.addNewUsers = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+
+
+
+exports.checkAppUserExistOrNot = async (req, res) => {
+  try {
+    const { email, org_id } = req.body;
+
+    // 1. Check if user exists by email
+    const userDetails = await prisma.app_users.findFirst({
+      where: { email: email },
+    });
+
+    if (userDetails) {
+      // 2. Check if user belongs to the given organization
+      const currentOrgDetails = await prisma.organisation_user.findFirst({
+        where: {
+          user_id: userDetails.id,
+          org_id: org_id,
+        },
+      });
+
+      if (currentOrgDetails) {
+        return res.json({
+          success: true,
+          current_org: true,
+          message: "This User Already Existed!",
+        });
+      }
+
+      return res.json({
+        success: true,
+        current_org: false,
+        message: "This User Already Existed!",
+        data: convertBigInt(userDetails),
+      });
+    } else {
+      return res.json({
+        success: false,
+        message: "This User not Existed!",
+      });
+    }
+  } catch (error) {
+    console.error("Error checking user existence:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };

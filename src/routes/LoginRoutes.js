@@ -20,8 +20,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/login', authController.login);
 router.get('/db-check', authController.dbCheck);
 router.post('/org-details', authController.OrgDetails);
-
+router.post('/check-user-exists', authController.checkAppUserExistOrNot);
 router.post('/forgotpassword', authController.forgotPassword);
+router.post('/add-new-user', upload.single('profile_pic'),authController.addNewUsers);
+
 
 //////////// My Profile /////////////////////////////////
 
