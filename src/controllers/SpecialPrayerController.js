@@ -864,3 +864,135 @@ exports.subscriptionsdetails = async (req, res) => {
   }
 };
 
+
+
+
+
+exports.prayForTheNation = async (req, res) => {
+  try {
+    const user = req.user; // from auth middleware
+    const pagename = "specialprayers";
+
+    if (user.role === 1) {
+      // Superadmin
+      const specialprayer = await prisma.session_prayers.findFirst({
+        where: { title: "Pray For The Nation" },
+        include: {
+          scriptures: true,
+          prayerpoints: true,
+          timeslots: true,
+        },
+      });
+
+      const categories = await prisma.session_prayer_category.findMany({
+        orderBy: { id: "desc" },
+      });
+
+      return res.json({
+        pagename,
+        specialprayer,
+        categories,
+      });
+    } else {
+      // Org user
+      const orgId = user.org_id;
+
+      const prayerdetails = await prisma.session_prayers.findFirst({
+        where: { title: "Pray For The Nation" },
+        include: {
+          session_scriptures: true,
+          session_prayer_points: true,
+          time_slots: true,
+        },
+      });
+
+      const specialprayer = await prisma.pray_for_nation.findFirst({
+        where: { org_id: orgId },
+        // include: {
+        //   timeslots: true,
+        // },
+      });
+
+      return res.json({
+        pagename,
+        specialprayer:convertBigInt(specialprayer),
+        prayerdetails:convertBigInt(prayerdetails),
+      });
+    }
+  } catch (error) {
+    console.error("Error in prayForTheNation:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+exports.updateNationPrayer = async (req, res) => {
+  try {
+    // Validate required field
+    if (!req.body.flow_type) {
+      return res.status(400).json({
+        success: false,
+        message: "flow_type is required",
+      });
+    }
+
+    const user = req.user; // assuming auth middleware sets req.user
+    const orgId = user.org_id;
+
+    const { sprayerid, prayerid, selectedTemplateId, flow_type, fromDate, toDate, numberOfDays } = req.body;
+
+    // Prepare data for insert/update
+    const data = {
+      image: selectedTemplateId,
+      flow_type,
+      from_date: fromDate ? new Date(fromDate) : null,
+      to_date: toDate ? new Date(toDate) : null,
+      prayer_id: prayerid,
+      number_of_days: numberOfDays ? parseInt(numberOfDays) : null,
+      org_id: orgId,
+    };
+
+    // Check if record already exists
+    let nationPrayer = await prisma.pray_for_nation.findFirst({
+      where: {
+        org_id: orgId,
+        prayer_id: prayerid,
+      },
+    });
+
+    if (nationPrayer) {
+      // Update existing record
+      nationPrayer = await prisma.pray_for_nation.update({
+        where: { id: nationPrayer.id },
+        data,
+      });
+    } else {
+      // Create new record
+      nationPrayer = await prisma.pray_for_nation.create({ data });
+    }
+
+    // Update Setting table
+    await prisma.settings.updateMany({
+      where: { org_id: orgId },
+      data: { pray_for_the_nation: "yes" },
+    });
+
+    return res.json({
+      success: true,
+      message: "Your settings are updated successfully!",
+      data: convertBigInt(nationPrayer),
+    });
+  } catch (error) {
+    console.error("Error in updateNationPrayer:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
